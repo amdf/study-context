@@ -12,8 +12,8 @@ type key int
 const requestIDKey key = 0
 
 func newContextWithRequestID(ctx context.Context, req *http.Request) context.Context {
-	fmt.Println(req.URL)
-	return context.WithValue(ctx, requestIDKey, req.Header.Get("X-Request-ID"))
+
+	return context.WithValue(ctx, requestIDKey, req.URL.Query()["id"][0])
 }
 
 func requestIDFromContext(ctx context.Context) string {
@@ -75,23 +75,3 @@ func main() {
 	fmt.Println("starting server at", addr)
 	log.Fatal(server.ListenAndServe())
 }
-
-// func main() {
-// http.HandleFunc("/start", startHandler)
-// http.HandleFunc("/stop", stopHandler)
-// http.HandleFunc("/limited", limitedHandler)
-
-// log.Fatal(http.ListenAndServe("localhost:8000", nil))
-// }
-
-// func startHandler(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Fprintf(w, "URL.Path = %q\n", r.URL.Path)
-// }
-
-// func stopHandler(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Fprintf(w, "URL.Path = %q\n", r.URL.Path)
-// }
-
-// func limitedHandler(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Fprintf(w, "URL.Path = %q\n", r.URL.Path)
-// }
