@@ -11,12 +11,16 @@ type key int
 
 const requestIDKey key = 0
 
-func newContextWithRequestID(ctx context.Context, req *http.Request) context.Context {
-
-	return context.WithValue(ctx, requestIDKey, req.URL.Query()["id"][0])
+func newContextWithID(ctx context.Context, req *http.Request) context.Context {
+	ids, ok := req.URL.Query()["id"]
+	var id string
+	if ok {
+		id = ids[0]
+	}
+	return context.WithValue(ctx, requestIDKey, id)
 }
 
-func requestIDFromContext(ctx context.Context) string {
+func getIDFromContext(ctx context.Context) string {
 	return ctx.Value(requestIDKey).(string)
 }
 
@@ -32,7 +36,7 @@ func (h ContextHandlerFunc) ServeHTTPContext(ctx context.Context, rw http.Respon
 
 func middleware(h ContextHandler) ContextHandler {
 	return ContextHandlerFunc(func(ctx context.Context, rw http.ResponseWriter, req *http.Request) {
-		ctx = newContextWithRequestID(ctx, req)
+		ctx = newContextWithID(ctx, req)
 		h.ServeHTTPContext(ctx, rw, req)
 	})
 }
@@ -47,13 +51,17 @@ func (ca *ContextAdapter) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 func startHandler(ctx context.Context, rw http.ResponseWriter, req *http.Request) {
-	reqID := requestIDFromContext(ctx)
-	fmt.Fprintf(rw, "Start handler. Request ID %s\n", reqID)
+	id := getIDFromContext(ctx)
+	if id == "" {
+		fmt.Fprintf(rw, "Start handler. Empty ID!\n")
+	} else {
+		fmt.Fprintf(rw, "Start handler. Request ID %s\n", id)
+	}
 }
 
 func stopHandler(ctx context.Context, rw http.ResponseWriter, req *http.Request) {
-	reqID := requestIDFromContext(ctx)
-	fmt.Fprintf(rw, "Stop handler. Request ID %s\n", reqID)
+	id := getIDFromContext(ctx)
+	fmt.Fprintf(rw, "Stop handler. Request ID %s\n", id)
 }
 
 func main() {
